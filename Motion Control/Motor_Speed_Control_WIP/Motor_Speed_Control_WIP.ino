@@ -3,6 +3,7 @@
 #include <Adafruit_PWMServoDriver.h>
 #include "pwm_map.h"
 #include "serial.h"
+#include "filter.h"
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
@@ -24,6 +25,7 @@ float v1Prev = 0;
 float eintegral = 0;
 int SerialInput = 0;  // Variable to store the last PWM value
 
+LowPassFilter filter1; // Filter for the first signal
 
 void setup() {
   pinMode(ENCA,INPUT);
@@ -60,8 +62,8 @@ void loop() {
   float v1 = velocity1 / 600.0 * 60.0;
 
   // Low-pass filter (25 Hz cutoff)
-  v1Filt = 0.854 * v1Filt + 0.0728 * v1 + 0.0728 * v1Prev;
-  v1Prev = v1;
+
+  v1Filt = filter1.update(v1);
 
   // Set a target
   SerialInput = serial_input();
