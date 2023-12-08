@@ -4,6 +4,7 @@
 #include "pwm_map.h"
 #include "serial.h"
 #include "filter.h"
+#include "PID.h"
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
@@ -11,21 +12,20 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define ENCA 2 // encoder input
 #define ENCB 3 // encoder input
 
+
 // globals
 long prevT = 0;
 int posPrev = 0;
 // Use the "volatile" directive for variables
 // used in an interrupt
 volatile int pos_i = 0;
-volatile long prevT_i = 0;
 
 float v1Filt = 0;
-float v1Prev = 0;
 
-float eintegral = 0;
 int SerialInput = 0;  // Variable to store the last PWM value
 
 LowPassFilter filter1; // Filter for the first signal
+PIDController pid1(10, 7.5, 1); // PID controller for process 1
 
 void setup() {
   pinMode(ENCA,INPUT);
@@ -69,13 +69,9 @@ void loop() {
   SerialInput = serial_input();
   float vt = SerialInput;
 
-  // Compute the control signal u
-  float kp = 10;
-  float ki = 10;
-  float e = vt - v1Filt;
-  eintegral = eintegral + e * deltaT;
+  // Compute the control signal u  
+  float u = pid1.calculate(SerialInput, v1Filt, deltaT);
   
-  float u = kp * e + ki * eintegral;
 
   // Set the motor speed and direction
   setMotor((u < 0) ? -1 : 1, min((int)fabs(u * 20), 4095));
