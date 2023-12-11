@@ -5,80 +5,81 @@
 #include "serial.h"
 #include "filter.h"
 #include "PID.h"
-
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-
-// Pins
-#define ENCA 2 // encoder input
-#define ENCB 3 // encoder input
+#include "initialization.h"
 
 
-// globals
+#define NMOTORS 1 // define numver of motors 
+
+const int ENCA[] = {2};
+const int ENCB[] = {3};
+
+volatile int pos_i[NMOTORS];
+volatile int posPrev[NMOTORS];
+volatile float velocity[NMOTORS];
+volatile float rpm[NMOTORS];
+volatile float rpmFilt[NMOTORS];
+
 long prevT = 0;
-int posPrev = 0;
-// Use the "volatile" directive for variables
-// used in an interrupt
-volatile int pos_i = 0;
-
-float v1Filt = 0;
 
 int SerialInput = 0;  // Variable to store the last PWM value
 
 LowPassFilter filter1; // Filter for the first signal
-PIDController pid1(10, 7.5, 1); // PID controller for process 1
+PIDController pid1(12.5, 7.5, 2); // PID controller for process 1
 
 void setup() {
-  pinMode(ENCA,INPUT);
-  pinMode(ENCB,INPUT);
+
+  for(int k = 0; k < NMOTORS; k++){
+  pinMode(ENCA[k],INPUT);
+  pinMode(ENCB[k],INPUT);
+  }
   
-  pwm.begin();                  // Enable communication with PCA9685
-  pwm.setOscillatorFrequency(27000000);  // Set onboard oscillator to 27MHz
-  pwm.setPWMFreq(1600);         // Set PWM frequency to 1.6kHz (max value)
+  initialization();
 
-  pwm_map_innit();
-  serial_innit();
-
-  attachInterrupt(digitalPinToInterrupt(ENCA), readEncoder, RISING);
-}
+  attachInterrupt(digitalPinToInterrupt(ENCA[0]), readEncoder<0>, RISING);
+} 
 
 void loop() {
 
 
   pwm_map(); // map the pwm input
 
-  int pos = 0;
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    pos = pos_i;
+  float deltaT;
+
+  int pos[NMOTORS];
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+    for(int k = 0; k < NMOTORS; k++){
+      pos[k] = pos_i[k];
+      }
   }
 
-  // Compute velocity with method 1
-  long currT = micros();
-  float deltaT = ((float) (currT - prevT)) / 1.0e6;
-  float velocity1 = (pos - posPrev) / deltaT;
-  posPrev = pos;
-  prevT = currT;
+  // Compute velocity
+  for (int k = 0; k < NMOTORS; k++){
+    long currT = micros();
+    deltaT = ((float) (currT - prevT)) / 1.0e6;
+    velocity[k] = (pos[k] - posPrev[k]) / deltaT;
+    posPrev[k] = pos[k];
+    prevT = currT;
 
-  // Convert count/s to RPM
-  float v1 = velocity1 / 600.0 * 60.0;
+    // Convert count/s to RPM
+    rpm[k] = velocity[k] / 600.0 * 60.0;
 
-  // Low-pass filter (25 Hz cutoff)
-
-  v1Filt = filter1.update(v1);
+    rpmFilt[k] = filter1.update(rpm[k]);
+    }
 
   // Set a target
   SerialInput = serial_input();
-  float vt = SerialInput;
+  float TargetV = SerialInput;
 
   // Compute the control signal u  
-  float u = pid1.calculate(SerialInput, v1Filt, deltaT);
+  float u = pid1.calculate(SerialInput, rpmFilt[0], deltaT);
   
 
   // Set the motor speed and direction
   setMotor((u < 0) ? -1 : 1, min((int)fabs(u * 20), 4095));
 
-  Serial.print(vt);
+  Serial.print(TargetV);
   Serial.print(" ");
-  Serial.print(v1Filt);
+  Serial.print(rpmFilt[0]);
   Serial.println();
   delay(1);
 }
@@ -100,8 +101,9 @@ void setMotor(int dir, int pwmVal) {
   }
 }
 
+template <int j>
 void readEncoder() {
   // Read encoder B when ENCA rises
-  int b = digitalRead(ENCB);
-  pos_i += (b > 0) ? 1 : -1;
+  int b = digitalRead(ENCB[j]);
+  pos_i[j] += (b > 0) ? 1 : -1;
 }
