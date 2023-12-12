@@ -28,35 +28,28 @@ volatile float deltaT;
 
 int SerialInput = 0;  // Variable to store the last PWM value
 
-LowPassFilter filter1; // Filter for the first signal
+LowPassFilter filter; // Filter for the first signal
 PIDController pid1(12.5, 5, 2); // PID controller for process 1
 
 void setup() {
-
   initialization();
-
   setupEncoders();
-
   attachInterrupt(digitalPinToInterrupt(ENCA[0]), readEncoder<0>, RISING);
 } 
 
 void loop() {
   float deltaT = calculateDeltaTime(); // get deltaT from the function
-
   pwm_map(); // map the pwm input
-
   calculatevelocity(deltaT);
-
-  // Set a target
+  // set a target from serial input
   SerialInput = serial_input();
   float TargetV = SerialInput;
-
-  // Compute the control signal u  
-  motorVelocity[0] = pid1.calculate(SerialInput, rpmFilt[0], deltaT);
-  
-  // Set the motor speed and direction
-  setMotor((motorVelocity[0] < 0) ? -1 : 1, min((int)fabs(motorVelocity[0] * 20), 4095));
-
+  // compute the control signal motorVelocity as inpput  
+  motorVelocity[0] = 20 * (int)pid1.calculate(TargetV, rpmFilt[0], deltaT);
+  //motorVelocity[0] = 4095;
+  // Set the motor velocity
+  setMotor();
+  // serial print data for debugging
   Serial.print(TargetV);
   Serial.print(" ");
   Serial.print(rpmFilt[0]);
@@ -64,22 +57,30 @@ void loop() {
   delay(1);
 }
 
-void setMotor(int dir, int pwmVal) {
-  pwm.setPWM(0, 0, pwmVal);
-  if (dir == 1) { 
-    // Turn one way
-    pwm.setPin(1, 0, 0);
-    pwm.setPin(2, 0, 4096);
-  } else if (dir == -1) {
-    // Turn the other way
-    pwm.setPin(1, 0, 4096);
-    pwm.setPin(2, 0, 0);
-  } else {
-    // Or don't turn
-    pwm.setPin(1, 0, 0);
-    pwm.setPin(2, 0, 0);
+void setMotor() {
+  for(int k = 0; k < NMOTORS; k++){
+    // Determine direction based on the sign of pwmVal
+    int dir = (motorVelocity[k] > 0) ? 1 : (motorVelocity[k] < 0) ? -1 : 0;
+    int absPwmVal = abs(motorVelocity[k]);
+
+    if (dir == 1) { 
+        // Turn one way
+        pwm.setPWM(RPWM[k], 0, min(absPwmVal, 4095));
+        pwm.setPin(IN1[k], 0, 0);
+        pwm.setPin(IN2[k], 0, 4096);
+    } else if (dir == -1) {
+        // Turn the other way
+        pwm.setPWM(RPWM[k], 0, min(absPwmVal, 4095));
+        pwm.setPin(IN1[k], 0, 4096);
+        pwm.setPin(IN2[k], 0, 0);
+    } else {
+        // Or don't turn
+        pwm.setPin(IN1[k], 0, 0);
+        pwm.setPin(IN2[k], 0, 0);speed 
+    }
   }
 }
+
 
 template <int j>
 void readEncoder() {
@@ -113,6 +114,6 @@ void calculatevelocity(float deltaT){
     // Convert count/s to RPM
     rpm[k] = velocity[k] / 600.0 * 60.0;
 
-    rpmFilt[k] = filter1.update(rpm[k]);
+    rpmFilt[k] = filter.update(rpm[k]);
     }
 }
