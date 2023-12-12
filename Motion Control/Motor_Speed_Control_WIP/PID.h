@@ -3,10 +3,11 @@
 
 class PIDController {
   public:
-    PIDController(float kp, float ki, float kd) {
+    PIDController(float kp, float ki, float kd, float integral_max = 40.0) {
       this->kp = kp;
       this->ki = ki;
       this->kd = kd;
+      this->integral_max = integral_max; // Maximum value for integral term
       integral = 0.0;
       previous_error = 0.0;
     }
@@ -20,6 +21,12 @@ class PIDController {
 
       // Integral term
       integral += error * dt;
+      // Clamp the integral term to prevent windup
+      if (integral > integral_max) {
+        integral = integral_max;
+      } else if (integral < -integral_max) {
+        integral = -integral_max;
+      }
       float I_out = ki * integral;
 
       // Derivative term
@@ -40,6 +47,7 @@ class PIDController {
     float ki; // Integral gain
     float kd; // Derivative gain
     float integral;
+    float integral_max; // Max value for integral to prevent windup
     float previous_error;
 };
 
