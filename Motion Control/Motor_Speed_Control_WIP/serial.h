@@ -4,7 +4,7 @@
 int LastInput = 0;
 
 void serial_innit(){
-    Serial.begin(9600);           // start serial for output
+    Serial.begin(9600); // Start serial for output
 }
 
 int serial_input(){
