@@ -3,7 +3,7 @@
 
 class PIDController {
   public:
-    PIDController(float kp, float ki, float kd, float integral_max = 40.0) {
+    PIDController(float kp, float ki, float kd, float integral_max = 30.0) {
       this->kp = kp;
       this->ki = ki;
       this->kd = kd;

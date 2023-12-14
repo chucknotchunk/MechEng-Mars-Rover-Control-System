@@ -29,4 +29,12 @@ void setupEncoders(){
   }
 }
 
+float calculateDeltaTime(){
+  static unsigned long prevT = 0; // Static variable to hold time of the last call
+  unsigned long currT = micros(); // Get the current time
+  float deltaT = ((float) (currT - prevT)) / 1.0e6; // Calculate the time difference in seconds
+  prevT = currT; // Update prevT for the next call
+  return deltaT; // Return the calculated deltaT
+}
+
 #endif
