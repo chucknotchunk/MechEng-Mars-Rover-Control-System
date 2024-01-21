@@ -9,6 +9,7 @@
 #include "PID.h"
 #include "initialization.h"
 #include "motor.h"
+#include "motion.h"
 
 // Define encoder pulses per revolution
 #define pulsePerRev 11
@@ -43,8 +44,10 @@ volatile float velocity[NMOTORS];
 volatile float rpm[NMOTORS];
 volatile float rpmFilt[NMOTORS];
 volatile float motorVelocity[NMOTORS];
+volatile float motorTargetV[NMOTORS];
 volatile float deltaT;
-float targetDistance = 0.0;
+volatile float targetDistance = 0.0;
+volatile float motorTargetPos[] = {0, 0, 0, 0, 0, 0};
 
 // Initialize serial input 
 int SerialInput = 0;
@@ -57,7 +60,6 @@ PIDController PID_distance[NMOTORS] = {
     PIDController(70, 0.1, 5), // PID for motor0
     /*
     PIDController(0.07, 0.01, 0.03), // PID for motor1
-
     */
 };
 
@@ -66,7 +68,6 @@ PIDController PID_velocity[NMOTORS] = {
     PIDController(450, 350, 20), // PID for motor0
     /*
     PIDController(450, 350, 20), // PID for motor1
-
     */
 };
 
@@ -78,7 +79,7 @@ void setup() {
 
 void loop() {
   // Get deltaT from the function
-  float deltaT = calculateDeltaTime();
+  deltaT = calculateDeltaTime();
   
   // Map the pwm input
   pwm_map(); 
@@ -86,29 +87,12 @@ void loop() {
   // calculate the velocity for each motor
   calculatevelocity(deltaT);
   
-  // Set a target from serial input
-  SerialInput = serial_input();
+  serial_input();
   
-  targetDistance = SerialInput;
-
-  // Compute the control signal motorVelocity as input  
-  float TargetV = constrain(PID_distance[0].calculate(targetDistance, convertCountsToDistance(pos_i[0]), deltaT), -20, 20);
-  motorVelocity[0] = (int)PID_velocity[0].calculate(TargetV, rpmFilt[0], deltaT);
-  
-  // Set the motor velocity
-  setMotor(motorVelocity, NMOTORS);
-  
-  // Serial print data for debugging
-  /*
-  Serial.print(TargetV);
-  Serial.print(" ");
-  Serial.print(rpmFilt[0]);
-  Serial.println();
-  delay(1);
-  */
+  driveMotors();
 
   // Debugging output
-  Serial.print(SerialInput);
+  Serial.print(motorTargetPos[0]);
   Serial.print(" ");
   Serial.print(convertCountsToDistance(pos_i[0]));
   Serial.println();
@@ -146,5 +130,16 @@ void calculatevelocity(float deltaT){
     posPrev[k] = pos[k]; // Update the previous position for the next calculation
     rpm[k] = velocity[k] / pulsePerRev / gearRatio * 60.0; // Convert count/s to RPM
     rpmFilt[k] = filter[k].update(rpm[k]); // Update the filtered RPM value using the low pass filter
+  }
+}
+
+void driveMotors(){
+  for(int k = 0; k < NMOTORS; k++){
+    // Convert target distance to motor target speed
+    motorTargetV[k] = constrain(PID_distance[k].calculate(motorTargetPos[k], convertCountsToDistance(pos_i[k]), deltaT), -20, 20);
+    // PID control for motor speed
+    motorVelocity[k] = (int)PID_velocity[0].calculate(motorTargetV[k], rpmFilt[k], deltaT);
+    // Set the motor velocity
+    setMotor(motorVelocity, NMOTORS);
   }
 }
