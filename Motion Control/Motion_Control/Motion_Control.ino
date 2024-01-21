@@ -26,18 +26,19 @@ const float wheelBase = 1;
 const int NMOTORS = 1;
 
 // Define encoder pins
-const int ENCA[] = {2};
-const int ENCB[] = {3};
+const int ENCA[] = { 2 };
+const int ENCB[] = { 3 };
 
 // Define forward/reverse level pwm pins
-const int RPWM[] = {0};
-const int LPWM[] = {0};
+const int RPWM[] = { 0 };
+const int LPWM[] = { 0 };
 
 // For demo motor driver only
-const int IN1[] = {1};  // Motor driver direction pin
-const int IN2[] = {2};  // Motor driver direction pin
+const int IN1[] = { 1 };  // Motor driver direction pin
+const int IN2[] = { 2 };  // Motor driver direction pin
 
 // Global variables
+volatile bool state = true;
 volatile int pos_i[NMOTORS];
 volatile int posPrev[NMOTORS];
 volatile float velocity[NMOTORS];
@@ -89,7 +90,7 @@ void loop() {
 
   serial_input();
 
-  driveMotors();
+  driveMotors(state);
 
   // Debugging output
   Serial.print(motorTargetPos[0]);
@@ -133,12 +134,16 @@ void calculatevelocity(float deltaT) {
   }
 }
 
-void driveMotors() {
+void driveMotors(bool state) {
   for (int k = 0; k < NMOTORS; k++) {
-    // Convert target distance to motor target speed
-    motorTargetV[k] = constrain(PID_distance[k].calculate(motorTargetPos[k], convertCountsToDistance(pos_i[k]), deltaT), -20, 20);
-    // PID control for motor speed
-    motorVelocity[k] = (int)PID_velocity[0].calculate(motorTargetV[k], rpmFilt[k], deltaT);
+    if (state == true) {
+      // Convert target distance to motor target speed
+      motorTargetV[k] = constrain(PID_distance[k].calculate(motorTargetPos[k], convertCountsToDistance(pos_i[k]), deltaT), -20, 20);
+      // PID control for motor speed
+      motorVelocity[k] = (int)PID_velocity[0].calculate(motorTargetV[k], rpmFilt[k], deltaT);
+    } else if (state == false) {
+      motorVelocity[k] = 0;
+    }
     // Set the motor velocity
     setMotor(motorVelocity, NMOTORS);
   }

@@ -3,6 +3,8 @@
 
 #include "motion.h"
 
+extern volatile bool state;
+
 void serial_innit() {
   Serial.begin(9600);  // Start serial for output
 }
@@ -17,7 +19,15 @@ void serial_input() {
     float commandRadius = 0.0;
     bool validCommand = false;
 
-    if (command.startsWith("move")) {
+    if (command.equals("stop")) {
+      state = false;  // Set state to false
+      Serial.println("Rover stopped.");
+      validCommand = true;
+    } else if (command.equals("resume")) {
+      state = true;  // Set state to true
+      Serial.println("Rover Resumed.");
+      validCommand = true;
+    } else if (command.startsWith("move")) {
       // Extract distance value for moving straight command
       commandDistance = command.substring(5).toFloat();  // Skip "move "
       moveStraight(commandDistance);
@@ -44,7 +54,7 @@ void serial_input() {
 
     if (!validCommand) {
       // Invalid command entered
-      Serial.println("Invalid command. Please enter 'move' followed by distance or 'turn' followed by angle and positive radius");
+      Serial.println("Invalid command. Please enter 'move' followed by distance or 'turn' followed by angle and radius");
     }
   }
 }
