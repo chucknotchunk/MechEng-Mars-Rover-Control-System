@@ -30,15 +30,17 @@ float serial_input(){
         command.trim(); // Remove any leading/trailing whitespace
 
         float commandDistance = 0.0;
+        float commandAngle = 0.0;
+        float commandRadius = 0.0;
         bool validCommand = false;
 
-        if (command.startsWith("forward")) {
-            // Extract distance value for forward command
-            commandDistance = command.substring(7).toFloat();
+        if (command.startsWith("move")) {
+            // Extract distance value for moving straight command
+            commandDistance = command.substring(4).toFloat();
             validCommand = true;
-        } else if (command.startsWith("backward")) {
+        } else if (command.startsWith("turn")) {
             // Extract distance value for backward command and negate it
-            commandDistance = -command.substring(8).toFloat();
+            commandAngle = command.substring(4).toFloat();
             validCommand = true;
         }
 
@@ -47,7 +49,7 @@ float serial_input(){
             TotalDistance += commandDistance;
         } else {
             // Invalid command entered
-            Serial.println("Invalid command. Please enter 'forward' or 'backward' followed by distance");
+            Serial.println("Invalid command. Please enter 'move' or 'turn' followed by distance/angle");
         }
     }
 

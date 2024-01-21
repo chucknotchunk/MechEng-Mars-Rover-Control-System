@@ -1,4 +1,5 @@
 // Define libraries
+#include <math.h>
 #include <Wire.h>
 #include <util/atomic.h>
 #include <Adafruit_PWMServoDriver.h>
@@ -16,6 +17,10 @@
 #define gearRatio 103
 #define wheelRadius 10 // Assuming wheel radius of 10 cm
 
+// Define Axle track and wheelbase
+const float axleTrack = 1.2; 
+const float wheelBase = 1;
+
 // Define number of motors 
 const int NMOTORS = 1; 
 
@@ -25,8 +30,9 @@ const int ENCB[] = {3};
 
 // Define forward/reverse level pwm pins
 const int RPWM[] = {0};
+const int LPWM[] = {0};
 
-// const int LPWM[] = {};
+// For demo motor driver only
 const int IN1[] = {1}; // Motor driver direction pin
 const int IN2[] = {2}; // Motor driver direction pin
 
@@ -39,8 +45,6 @@ volatile float rpmFilt[NMOTORS];
 volatile float motorVelocity[NMOTORS];
 volatile float deltaT;
 float targetDistance = 0.0;
-volatile long targetCounts = 0;
-volatile long currentCounts = 0;
 
 // Initialize serial input 
 int SerialInput = 0;
@@ -48,16 +52,28 @@ int SerialInput = 0;
 // Declare an array of filters, one for each motor
 LowPassFilter filter[NMOTORS];
 
-// PID controller for motor1
-PIDController pid1(450, 350, 20);
+// Initialize an array of PIDController for motor distance control
+PIDController PID_distance[NMOTORS] = {
+    PIDController(70, 0.1, 5), // PID for motor0
+    /*
+    PIDController(0.07, 0.01, 0.03), // PID for motor1
 
-// PID controller for distance control
-PIDController pid2(0.07, 0.01, 0.03);
+    */
+};
+
+// Initialize an array of PIDController for motor velocity control
+PIDController PID_velocity[NMOTORS] = {
+    PIDController(450, 350, 20), // PID for motor0
+    /*
+    PIDController(450, 350, 20), // PID for motor1
+
+    */
+};
 
 void setup() {
   initialization();
   setupEncoders();
-  attachInterrupt(digitalPinToInterrupt(ENCA[0]), readEncoder<0>, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCA[0]), readEncoder<0>, RISING); // Attach interrupt for encoders of each wheel
 } 
 
 void loop() {
@@ -69,18 +85,15 @@ void loop() {
   
   // calculate the velocity for each motor
   calculatevelocity(deltaT);
-
-  // Read current encoder counts
-  currentCounts = readEncoderCounts();
   
   // Set a target from serial input
   SerialInput = serial_input();
-  //float TargetV = SerialInput;
-  setTargetDistance(SerialInput);
   
+  targetDistance = SerialInput;
+
   // Compute the control signal motorVelocity as input  
-  float TargetV = max(-20,min(20,pid2.calculate(targetCounts, currentCounts, deltaT)));
-  motorVelocity[0] = (int)pid1.calculate(TargetV, rpmFilt[0], deltaT);
+  float TargetV = constrain(PID_distance[0].calculate(targetDistance, convertCountsToDistance(pos_i[0]), deltaT), -20, 20);
+  motorVelocity[0] = (int)PID_velocity[0].calculate(TargetV, rpmFilt[0], deltaT);
   
   // Set the motor velocity
   setMotor(motorVelocity, NMOTORS);
@@ -95,29 +108,17 @@ void loop() {
   */
 
   // Debugging output
-  //Serial.print("Target: ");
   Serial.print(SerialInput);
-  //Serial.print(" Current: ");
   Serial.print(" ");
-  Serial.print(convertCountsToDistance(currentCounts));
+  Serial.print(convertCountsToDistance(pos_i[0]));
   Serial.println();
-  delay(1);
+  //delay(1);
 }
 
 template <int j>
 void readEncoder() {
   int b = digitalRead(ENCB[j]); // Read encoder B when ENCA rises
   pos_i[j] += (b > 0) ? 1 : -1; // Increment or decrement the position count based on the state of encoder pin B
-}
-
-void setTargetDistance(float distance) {
-  targetDistance = distance;
-  targetCounts = convertDistanceToCounts(targetDistance);
-}
-
-long readEncoderCounts() {
-  // Returns the current encoder count
-  return pos_i[0];
 }
 
 float convertDistanceToCounts(float distance) {
@@ -127,7 +128,7 @@ float convertDistanceToCounts(float distance) {
 
 float convertCountsToDistance(long counts) {
     // Calculate the distance based on encoder counts
-    return (float)counts / (pulsePerRev * gearRatio) * (wheelRadius * 2 * 3.14) / 100;
+    return (float)counts / (pulsePerRev * gearRatio) * (wheelRadius * 2 * M_PI) / 100;
 }
 
 void calculatevelocity(float deltaT){
