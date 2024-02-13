@@ -1,7 +1,6 @@
 // Define libraries
 #include <math.h>
 #include <Wire.h>
-#include <util/atomic.h>
 #include <Adafruit_PWMServoDriver.h>
 #include "pwm_map.h"
 #include "serial.h"
@@ -16,7 +15,10 @@
 
 // Define gear ratio
 #define gearRatio 103
-#define wheelRadius 10  // Assuming wheel radius of 10 cm
+#define wheelRadius 0.1  // Assuming wheel radius of 0.1m
+
+// Define wheel RPM limit
+#define rpmLimit 20
 
 // Define Axle track and wheelbase
 const float axleTrack = 1.2;
@@ -31,7 +33,7 @@ const int ENCB[] = { 3 };
 
 // Define forward/reverse level pwm pins
 const int RPWM[] = { 0 };
-const int LPWM[] = { 0 };
+const int LPWM[] = { 1 };
 
 // For demo motor driver only
 const int IN1[] = { 1 };  // Motor driver direction pin
@@ -58,8 +60,8 @@ LowPassFilter filter[NMOTORS];
 
 // Initialize an array of PIDController for motor distance control
 PIDController PID_distance[NMOTORS] = {
-  PIDController(70, 0.1, 5),  // PID for motor0
-                              /*
+  PIDController(70, 0, 0),  // PID for motor0
+                            /*
     PIDController(0.07, 0.01, 0.03), // PID for motor1
     */
 };
@@ -74,22 +76,21 @@ PIDController PID_velocity[NMOTORS] = {
 
 void setup() {
   initialization();
-  setupEncoders();
   attachInterrupt(digitalPinToInterrupt(ENCA[0]), readEncoder<0>, RISING);  // Attach interrupt for encoders of each wheel
 }
 
 void loop() {
   // Get deltaT from the function
-  deltaT = calculateDeltaTime();
+  calculateDeltaTime();
 
-  // Map the pwm input
+  // Map the pwm input, just for the demo setup
   pwm_map();
 
   // calculate the velocity for each motor
   calculatevelocity(deltaT);
-
+  // Serial command
   serial_input();
-
+  // Drive the motors
   driveMotors(state);
 
   // Debugging output
@@ -108,23 +109,22 @@ void readEncoder() {
 
 float convertDistanceToCounts(float distance) {
   // Convert the target distance to encoder counts
-  return 100 * distance / (wheelRadius * 2 * 3.14) * pulsePerRev * gearRatio;
+  return distance / (wheelRadius * 2 * 3.14) * pulsePerRev * gearRatio;
 }
 
 float convertCountsToDistance(long counts) {
   // Calculate the distance based on encoder counts
-  return (float)counts / (pulsePerRev * gearRatio) * (wheelRadius * 2 * M_PI) / 100;
+  return (float)counts / (pulsePerRev * gearRatio) * (wheelRadius * 2 * M_PI);
 }
 
 void calculatevelocity(float deltaT) {
   int pos[NMOTORS];  // Temporary array to store current positions for each motor
   // Ensure atomic access to pos_i array to prevent data corruption
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    for (int k = 0; k < NMOTORS; k++) {
-      pos[k] = pos_i[k];  // Copy the current position from the shared pos_i array
-    }
+  noInterrupts();  // disable interrupts temporarily while reading
+  for (int k = 0; k < NMOTORS; k++) {
+    pos[k] = pos_i[k];  // Copy the current position from the shared pos_i array
   }
-
+  interrupts();  // turn interrupts back on
   // Compute the velocity for each motor
   for (int k = 0; k < NMOTORS; k++) {
     velocity[k] = (pos[k] - posPrev[k]) / deltaT;           // Calculate the velocity as the difference in position divided by the time interval
@@ -138,9 +138,9 @@ void driveMotors(bool state) {
   for (int k = 0; k < NMOTORS; k++) {
     if (state == true) {
       // Convert target distance to motor target speed
-      motorTargetV[k] = constrain(PID_distance[k].calculate(motorTargetPos[k], convertCountsToDistance(pos_i[k]), deltaT), -20, 20);
+      motorTargetV[k] = constrain(PID_distance[k].calculate(motorTargetPos[k], convertCountsToDistance(pos_i[k]), deltaT), -rpmLimit, rpmLimit);
       // PID control for motor speed
-      motorVelocity[k] = (int)PID_velocity[0].calculate(motorTargetV[k], rpmFilt[k], deltaT);
+      motorVelocity[k] = PID_velocity[0].calculate(motorTargetV[k], rpmFilt[k], deltaT);
     } else if (state == false) {
       motorVelocity[k] = 0;
     }
