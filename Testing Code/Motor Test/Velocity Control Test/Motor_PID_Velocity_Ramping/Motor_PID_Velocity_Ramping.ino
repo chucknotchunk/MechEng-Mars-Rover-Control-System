@@ -7,8 +7,8 @@
 #include "PID.h"
 #include "initialization.h"
 #include "motor.h"
-#include "motion.h"
-#include <Derivs_Limiter.h> 
+
+#include <Derivs_Limiter.h>
 
 // Define encoder pulses per revolution
 #define pulsePerRev 16
@@ -18,7 +18,7 @@
 #define wheelRadius 0.1  // Assuming wheel radius of 0.1m
 
 // Define wheel RPM limit
-#define rpmLimit 40
+#define rpmLimit 10
 
 // Define Axle track and wheelbase
 const float axleTrack = 1.2;
@@ -28,27 +28,25 @@ const float wheelBase = 1;
 const int NMOTORS = 2;
 
 // Define encoder pins
-const int ENCA[] = { 2, 4 };
-const int ENCB[] = { 3, 5 };
+const int ENCA[] = { 2,4};
+const int ENCB[] = { 3,5};
 
 // Define forward/reverse level pwm pins
-const int RPWM[] = { 4, 6 };
-const int LPWM[] = { 5, 7 };
+const int RPWM[] = { 4,6};
+const int LPWM[] = { 5,7};
 
 // Global variables
 volatile bool state = true;
 volatile int pos_i[NMOTORS];
 volatile int posPrev[NMOTORS];
 volatile float velocity[NMOTORS];
-volatile float rpm[NMOTORS];
-volatile float rpmFilt[NMOTORS];
-volatile float motorVelocity[NMOTORS];
-volatile float motorTargetV[NMOTORS];
+float rpm[NMOTORS];
+float rpmFilt[NMOTORS];
+float motorVelocity[NMOTORS];
+float motorTargetV[NMOTORS];
 volatile float deltaT;
 volatile float targetDistance = 0.0;
 volatile float motorTargetPos[] = { 0, 0, 0, 0, 0, 0 };
-
-Derivs_Limiter limiter[NMOTORS];
 
 // Initialize serial input
 int SerialInput = 0;
@@ -64,41 +62,35 @@ PIDController PID_distance[NMOTORS] = {
 
 // Initialize an array of PIDController for motor velocity control
 PIDController PID_velocity[NMOTORS] = {
-  PIDController(220, 120, 0),  // PID for motor0
-  PIDController(220, 120, 0),  // PID for motor1
+  PIDController(400, 120, 0),  // PID for motor0
+  PIDController(400, 120, 0),  // PID for motor1
 };
 
-float velLimit[NMOTORS] = { 200, 200 };
-float accLimit[NMOTORS] = { 100, 100 };
+Derivs_Limiter limiter = Derivs_Limiter(300, 200, 200); // velocityLimit, accelerationLimit, decelerationLimit
 
 void setup() {
   initialization();
-
-  for (int i = 0; i < NMOTORS; i++) {
-    limiter[i] = Derivs_Limiter(velLimit[i], accLimit[i]);
-  }
-  // attach external interrupt for encoder
   attachInterrupt(digitalPinToInterrupt(ENCA[0]), readEncoder<0>, RISING);  // Attach interrupt for encoders of each wheel
   attachInterrupt(digitalPinToInterrupt(ENCA[1]), readEncoder<1>, RISING);  // Attach interrupt for encoders of each wheel
 }
 
 void loop() {
-  // Calculate deltaT 
+  // Get deltaT from the function
   calculateDeltaTime();
 
-  // Calculate the velocity for each motor
   calculatevelocity();
-  // Serial command
-  serial_input();
-  // Drive the motors
-  driveMotors(state);
 
+  SerialInput = serial_input();
+
+  //setMotor(serial_input(), NMOTORS);
+
+  driveMotors(true);
   // Debugging output
-  Serial.print(motorTargetPos[0]);
+  Serial.print(rpmFilt[0]);
   Serial.print(" ");
-  Serial.print(convertCountsToDistance(pos_i[0]));
+  Serial.print(rpmFilt[1]);
   Serial.println();
-  //delay(1);
+  delay(1);
 }
 
 template<int j>
@@ -125,7 +117,7 @@ void calculatevelocity() {
     pos[k] = pos_i[k];  // Copy the current position from the shared pos_i array
   }
   interrupts();  // turn interrupts back on
-
+  
   // Compute the velocity for each motor
   for (int k = 0; k < NMOTORS; k++) {
     velocity[k] = (pos[k] - posPrev[k]) / deltaT;           // Calculate the velocity as the difference in position divided by the time interval
@@ -135,13 +127,12 @@ void calculatevelocity() {
   }
 }
 
+
 void driveMotors(bool state) {
+
   for (int k = 0; k < NMOTORS; k++) {
     if (state == true) {
-      // Convert target distance to motor target speed
-      motorTargetV[k] = limiter[k].calc(constrain(PID_distance[k].calculate(motorTargetPos[k], convertCountsToDistance(pos_i[k]), deltaT), -rpmLimit, rpmLimit));
-      // PID control for motor speed
-      motorVelocity[k] = PID_velocity[k].calculate(motorTargetV[k], rpmFilt[k], deltaT);
+      motorVelocity[k] = PID_velocity[k].calculate(limiter.calc(SerialInput), rpmFilt[k], deltaT);
     } else if (state == false) {
       motorVelocity[k] = 0;
     }

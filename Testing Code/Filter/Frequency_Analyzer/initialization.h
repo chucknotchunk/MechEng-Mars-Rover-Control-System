@@ -14,7 +14,7 @@ void setupEncoders();
 
 // Function to initialize system components
 void initialization(void) {
-  //pwm_map_innit();  // Initialize the PWM map
+  pwm_map_innit();  // Initialize the PWM map
   serial_innit();   // Initialize serial communication
 
   pwm.begin();                           // Start communication with PCA9685 PWM driver

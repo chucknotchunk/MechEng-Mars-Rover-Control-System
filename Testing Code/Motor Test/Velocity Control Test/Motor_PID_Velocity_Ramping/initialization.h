@@ -15,7 +15,7 @@ void setupEncoders();
 // Function to initialize system components
 void initialization(void) {
   //pwm_map_innit();  // Initialize the PWM map
-  serial_innit();   // Initialize serial communication
+  serial_innit();  // Initialize serial communication
 
   pwm.begin();                           // Start communication with PCA9685 PWM driver
   pwm.setOscillatorFrequency(27000000);  // Set the onboard oscillator of PCA9685 to 27 MHz
@@ -34,10 +34,10 @@ void setupEncoders() {
 }
 
 float calculateDeltaTime() {
-  static unsigned long prevT = 0;                   // Static variable to hold time of the last call
-  unsigned long currT = micros();                   // Get the current time
+  static unsigned long prevT = 0;             // Static variable to hold time of the last call
+  unsigned long currT = micros();             // Get the current time
   deltaT = ((float)(currT - prevT)) / 1.0e6;  // Calculate the time difference in seconds
-  prevT = currT;                                    // Update prevT for the next call
+  prevT = currT;                              // Update prevT for the next call
 }
 
 #endif

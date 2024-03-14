@@ -28,20 +28,20 @@ void turnByRadius(int angle, float radius) {
   // Update motor positions based on the turn direction
   if (angle > 0) {
     // Right turn
-    motorTargetPos[0] = motorTargetPos[0] + turnArcRightOuter;
-    motorTargetPos[2] = motorTargetPos[2] + turnArcRightInner;
-    motorTargetPos[4] = motorTargetPos[4] + turnArcRightOuter;
-    motorTargetPos[1] = motorTargetPos[1] + turnArcLeftOuter;
-    motorTargetPos[3] = motorTargetPos[3] + turnArcLeftInner;
-    motorTargetPos[5] = motorTargetPos[5] + turnArcLeftOuter;
+    motorTargetPos[3] = motorTargetPos[3] + turnArcRightOuter;
+    motorTargetPos[4] = motorTargetPos[4] + turnArcRightInner;
+    motorTargetPos[5] = motorTargetPos[5] + turnArcRightOuter;
+    motorTargetPos[0] = motorTargetPos[0] + turnArcLeftOuter;
+    motorTargetPos[1] = motorTargetPos[1] + turnArcLeftInner;
+    motorTargetPos[2] = motorTargetPos[2] + turnArcLeftOuter;
   } else if (angle < 0) {
     // Left turn
-    motorTargetPos[0] = motorTargetPos[0] + turnArcLeftOuter;
-    motorTargetPos[2] = motorTargetPos[2] + turnArcLeftInner;
-    motorTargetPos[4] = motorTargetPos[4] + turnArcLeftOuter;
-    motorTargetPos[1] = motorTargetPos[1] + turnArcRightOuter;
-    motorTargetPos[3] = motorTargetPos[3] + turnArcRightInner;
-    motorTargetPos[5] = motorTargetPos[5] + turnArcRightOuter;
+    motorTargetPos[3] = motorTargetPos[3] + turnArcLeftOuter;
+    motorTargetPos[4] = motorTargetPos[4] + turnArcLeftInner;
+    motorTargetPos[5] = motorTargetPos[5] + turnArcLeftOuter;
+    motorTargetPos[0] = motorTargetPos[0] + turnArcRightOuter;
+    motorTargetPos[1] = motorTargetPos[1] + turnArcRightInner;
+    motorTargetPos[2] = motorTargetPos[2] + turnArcRightOuter;
   }
 }
 

@@ -9,7 +9,7 @@ public:
   }
 
   float update(float v) {
-    vFilt = 0.96906992 * vFilt + 0.01546504 * v + 0.01546504 * vPrev;
+    vFilt = 0.854 * vFilt + 0.0728 * v + 0.0728 * vPrev;
     vPrev = v;
     return vFilt;
   }
@@ -18,5 +18,6 @@ private:
   float vPrev;  // Previous input value
   float vFilt;  // Filtered output
 };
+
 
 #endif
