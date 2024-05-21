@@ -8,7 +8,7 @@
 #include "initialization.h"
 #include "motor.h"
 #include "motion.h"
-#include <Derivs_Limiter.h> 
+#include <Derivs_Limiter.h>
 
 // Define encoder pulses per revolution
 #define pulsePerRev 16
@@ -25,15 +25,18 @@ const float axleTrack = 1.2;
 const float wheelBase = 1;
 
 // Define number of motors
-const int NMOTORS = 2;
+const int NMOTORS = 6;
 
 // Define encoder pins
-const int ENCA[] = { 2, 4 };
-const int ENCB[] = { 3, 5 };
+const int ENCA[] = { 2, 4, 6, 8, 10, 12 };
+const int ENCB[] = { 3, 5, 7, 9, 11, 13 };
 
 // Define forward/reverse level pwm pins
-const int RPWM[] = { 4, 6 };
-const int LPWM[] = { 5, 7 };
+const int RPWM[] = { 4, 6, 8, 10, 12, 14 };
+const int LPWM[] = { 5, 7, 9, 11, 13, 15 };
+
+// Define directional multiplier for motor
+const int dirMotor[] = { 1, 1, 1, 1, -1, -1 };
 
 // Global variables
 volatile bool state = true;
@@ -60,16 +63,25 @@ LowPassFilter filter[NMOTORS];
 PIDController PID_distance[NMOTORS] = {
   PIDController(70, 0, 0),  // PID for motor0
   PIDController(70, 0, 0),  // PID for motor1
+  PIDController(70, 0, 0),  // PID for motor2
+  PIDController(70, 0, 0),  // PID for motor3
+  PIDController(70, 0, 0),  // PID for motor4
+  PIDController(70, 0, 0),  // PID for motor5
 };
 
 // Initialize an array of PIDController for motor velocity control
 PIDController PID_velocity[NMOTORS] = {
-  PIDController(220, 120, 0),  // PID for motor0
-  PIDController(220, 120, 0),  // PID for motor1
+  PIDController(400, 120, 0),  // PID for motor0
+  PIDController(400, 120, 0),  // PID for motor1
+  PIDController(400, 120, 0),  // PID for motor2
+  PIDController(400, 120, 0),  // PID for motor3
+  PIDController(400, 120, 0),  // PID for motor4
+  PIDController(400, 120, 0),  // PID for motor5
+
 };
 
-float velLimit[NMOTORS] = { 200, 200 };
-float accLimit[NMOTORS] = { 100, 100 };
+float velLimit[NMOTORS] = { 200, 200, 200, 200, 200, 200 };
+float accLimit[NMOTORS] = { 100, 100, 100, 100, 100, 100 };
 
 void setup() {
   initialization();
@@ -80,10 +92,14 @@ void setup() {
   // attach external interrupt for encoder
   attachInterrupt(digitalPinToInterrupt(ENCA[0]), readEncoder<0>, RISING);  // Attach interrupt for encoders of each wheel
   attachInterrupt(digitalPinToInterrupt(ENCA[1]), readEncoder<1>, RISING);  // Attach interrupt for encoders of each wheel
+  attachInterrupt(digitalPinToInterrupt(ENCA[2]), readEncoder<2>, RISING);  // Attach interrupt for encoders of each wheel
+  attachInterrupt(digitalPinToInterrupt(ENCA[3]), readEncoder<3>, RISING);  // Attach interrupt for encoders of each wheel
+  attachInterrupt(digitalPinToInterrupt(ENCA[4]), readEncoder<4>, RISING);  // Attach interrupt for encoders of each wheel
+  attachInterrupt(digitalPinToInterrupt(ENCA[5]), readEncoder<5>, RISING);  // Attach interrupt for encoders of each wheel
 }
 
 void loop() {
-  // Calculate deltaT 
+  // Calculate deltaT
   calculateDeltaTime();
 
   // Calculate the velocity for each motor
