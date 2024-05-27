@@ -14,4 +14,10 @@ void sendSamplingCommand(byte slaveAddr, byte command) {
   Wire.endTransmission();
 }
 
+void sendMotionCommand(byte slaveAddr, byte command) {
+  Wire.beginTransmission(slaveAddr);
+  Wire.write(command);
+  Wire.endTransmission();
+}
+
 #endif

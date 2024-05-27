@@ -27,14 +27,21 @@ volatile float currentPowerDraw = 0.0;        // in Amps
 volatile float currentPowerLevel = 0.0;       // in percentage
 volatile float currentCoreTemperature = 0.0;  // in Celsius
 
+// Motion control interrupt set up
+const byte interruptPin = 3; // Input pin for 
+const byte outputPin = 2; // Output pin for emergency stop
+volatile bool interruptFlag = false;
+
 void setup() {
-  Wire.begin();   // Initialize I2C as master
+  Wire.begin();  // Initialize I2C as master
+  Wire.setClock(400000);
   serial_init();  // Initialize serial communication
 }
 
 void loop() {
   // Request battery status from the slave
-  requestBatteryState(BATTERY_SUBSYSTEM_ADDR);
+  pollSubsystemState();
+  // requestBatteryState(BATTERY_SUBSYSTEM_ADDR);
 
   // Print the received data to the serial monitor
   Serial.print("Current Power Draw: ");
@@ -49,7 +56,7 @@ void loop() {
   Serial.print(currentCoreTemperature);
   Serial.println(" °C");
 
-  delay(100); // Delay to avoid excessive I2C bus usage
+  delay(100);  // Delay to avoid excessive I2C bus usage
 }
 
 // Function to poll status from eac subsystem
@@ -57,4 +64,9 @@ void pollSubsystemState() {
   requestPanelState(PANEL_SUBSYSTEM_ADDR);
   requestSamplingState(DRILL_SUBSYSTEM_ADDR);
   requestBatteryState(BATTERY_SUBSYSTEM_ADDR);
+}
+
+void handleInterrupt() {
+  // Set the flag to indicate the interrupt occurred
+  interruptFlag = true;
 }

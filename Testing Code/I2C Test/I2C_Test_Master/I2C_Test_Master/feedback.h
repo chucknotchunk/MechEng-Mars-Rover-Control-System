@@ -36,7 +36,7 @@ void requestSamplingState(byte slaveAddr) {
 
 void requestBatteryState(byte slaveAddr) {
   Wire.requestFrom(slaveAddr, 12);  // Request 12 bytes from the slave
-  delay(10); // Small delay to ensure data is available
+  delay(10);                        // Small delay to ensure data is available
 
   Serial.print("Bytes available: ");
   Serial.println(Wire.available());
