@@ -24,7 +24,7 @@ unsigned int bufferedPWM[16];
 void setup() {
   Wire.begin(BATTERY_SUBSYSTEM_ADDR);  // Start I2C as slave with address 0x04
   Wire.setClock(400000);
-  Wire.onReceive(receiveEvent);        // Register event for receiving data
+  Wire.onReceive(receiveEvent);  // Register event for receiving data
   Wire.onRequest(requestEvent);  // Register event for sending data
   Serial.begin(9600);            // Start serial communication for debugging
 
