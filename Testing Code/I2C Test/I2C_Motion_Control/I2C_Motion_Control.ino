@@ -10,7 +10,6 @@
 #include "motor.h"
 #include "motion.h"
 
-
 // Define encoder pulses per revolution
 #define pulsePerRev 16
 
@@ -22,7 +21,11 @@
 #define rpmLimit 50
 
 // Define how close the current position should be to the target to consider it complete
-#define POSITION_TOLERANCE 0.05
+#define positionTolerance 0.05
+
+// Define the pins for interrupt and output
+#define interruptPin 0
+#define outputPin 1
 
 // Define Axle track and wheelbase
 const float axleTrack = 1.2;
@@ -44,6 +47,7 @@ const int dirMotor[] = { 1, 1, 1, 1, -1, -1 };
 
 // Global variables
 volatile bool roverActive = true;
+volatile bool interruptFlag = false;
 volatile long pos_i[NMOTORS];
 volatile int posPrev[NMOTORS];
 volatile float velocity[NMOTORS];
@@ -91,10 +95,17 @@ PIDController PID_velocity[NMOTORS] = {
 void setup() {
   initialization();
 
+  // Configure the pins
+  pinMode(interruptPin, INPUT);
+  pinMode(outputPin, OUTPUT);
+
   // set the velocity and acceleration limiter for each motor
   // for (int i = 0; i < NMOTORS; i++) {
   //   limiter[i] = Derivs_Limiter(velLimit[i], accLimit[i]);
   // }
+
+  // Attach interrupt to the pin for emergency stop
+  attachInterrupt(digitalPinToInterrupt(interruptPin), handleInterrupt, RISING);
 
   // attach external interrupt for encoder of each motor
   attachInterrupt(digitalPinToInterrupt(ENCA[0]), readEncoder<0>, RISING);  // Attach interrupt for encoders of each wheel
@@ -113,7 +124,18 @@ void loop() {
   calculatevelocity();
   // Take serial command
   serial_input();
-  // Drive the motors
+
+  // Deactivate motors once the last command is completed to release the I2C bus
+  if (isCommandComplete() || interruptFlag) {
+    roverActive = false;
+    // Inform the central controller that the last command is completed / Motors stopped
+    digitalWrite(outputPin, HIGH);
+  } else {
+    roverActive = true;
+    digitalWrite(outputPin, LOW);
+  }
+
+  // Control the motors
   driveMotors(roverActive);
 
   // Debugging output
@@ -178,9 +200,14 @@ void driveMotors(bool roverActive) {
 // Function to check if last commanded motion is completed
 bool isCommandComplete() {
   for (int k = 0; k < NMOTORS; k++) {
-    if (abs(convertCountsToDistance(pos_i[k]) - motorTargetPos[k]) > POSITION_TOLERANCE) {
+    if (abs(convertCountsToDistance(pos_i[k]) - motorTargetPos[k]) > positionTolerance) {
       return false;
     }
   }
   return true;
+}
+
+void handleInterrupt() {
+  // Set the flag to indicate the interrupt occurred
+  interruptFlag = true;
 }

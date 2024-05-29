@@ -4,37 +4,28 @@
 #include "feedback.h"
 #include "command.h"
 
-// Command constants
-const int PANEL_DEPLOY_COMMAND = 0x01;
-const int PANEL_RETRACT_COMMAND = 0x02;
-const int DEACTIVATE_MAGNET_COMMAND = 0x03;
-const int DRILL_DEPLOY_COMMAND = 0x04;
-const int DRILL_RETRACT_COMMAND = 0x05;
+#define PANEL_DEPLOY_COMMAND 0x01
+#define PANEL_RETRACT_COMMAND 0x02
+#define DEACTIVATE_MAGNET_COMMAND 0x03
+#define DRILL_DEPLOY_COMMAND 0x04
+#define DRILL_RETRACT_COMMAND 0x05
 
 // Subsystem addresses
-const int PANEL_SUBSYSTEM_ADDR = 0x0A;
-const int DRILL_SUBSYSTEM_ADDR = 0x0B;
-const int BATTERY_SUBSYSTEM_ADDR = 0x0C;
-const int MOTION_SUBSYSTEM_ADDR = 0x0D;
+#define PANEL_SUBSYSTEM_ADDR 0x0A
+#define DRILL_SUBSYSTEM_ADDR 0x0B
+#define BATTERY_SUBSYSTEM_ADDR 0X0C
+#define MOTION_SUBSYSTEM_ADDR 0X0D
 
 // Define the pins for interrupt and output
-const int interruptPin = 3;
-const int outputPin = 2;
-
-
-const float batteryOverl = 10;  // Define battery overload threshold
-const float batteryLow = 20;    // Define battery level low threshold
-const float batteryHot = 50;    // Define battery core termperature overheat threshold
+#define interruptPin 3
+#define outputPin 2
 
 // Define global variables for panel feedback
 volatile bool panelStatus = false;  // Retracted
 
-// Define global variables for sample collection feedback
+// Define global variables for simple collection feedback
 volatile bool drillStatus = false;  // Stopped
 volatile bool armStatus = false;    // Retracted
-
-// Define global variables for motion control feedback
-volatile bool roverMoving = false;  // Not moving
 
 // Define global variables for battery feedback
 volatile float currentPowerDraw = 0.0;        // in Amps
@@ -58,10 +49,30 @@ void setup() {
 }
 
 void loop() {
-  // Request status update from the slave
-  pollSubsystemState();
+  // // Request battery status from the slave
+  // pollSubsystemState();
+  // // requestBatteryState(BATTERY_SUBSYSTEM_ADDR);
+
+  // // Print the received data to the serial monitor
+  // Serial.print("Current Power Draw: ");
+  // Serial.print(currentPowerDraw);
+  // Serial.println(" A");
+
+  // Serial.print("Current Power Level: ");
+  // Serial.print(currentPowerLevel);
+  // Serial.println(" %");
+
+  // Serial.print("Current Core Temperature: ");
+  // Serial.print(currentCoreTemperature);
+  // Serial.println(" °C");
 
   // delay(10);  // Delay to avoid excessive I2C bus usage
+
+  // Example: sending commands from serial input for testing purposes
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    sendMotionCommand(MOTION_SUBSYSTEM_ADDR, command);
+  }
 }
 
 // Function to poll status from eac subsystem

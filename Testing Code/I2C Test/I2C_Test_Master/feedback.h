@@ -2,7 +2,7 @@
 #define _FEEDBACK_H
 
 #include "helper.h"
-// Define global variables for panel feedback
+// Define global variables for panel feedback 
 extern volatile bool panelStatus;  // Retracted
 
 // Define global variables for simple collection feedback
