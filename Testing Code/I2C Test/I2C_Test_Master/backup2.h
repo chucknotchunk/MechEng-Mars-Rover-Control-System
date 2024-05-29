@@ -46,9 +46,9 @@ volatile float currentCoreTemperature = 0.0;  // in Celsius
 volatile bool interruptFlag = false;
 
 void setup() {
-  comm_init();                                                                    // Initialize communication system
-  sys_init();                                                                     // Initialize control system
-  attachInterrupt(digitalPinToInterrupt(interruptPin), handleInterrupt, RISING);  //  Attach interrupt to the rising edge
+  comm_init();  // Initialize communication system
+  sys_init();   // Initialize control system
+  attachInterrupt(digitalPinToInterrupt(interruptPin), handleInterrupt, RISING);   //  Attach interrupt to the rising edge
 }
 
 void loop() {
@@ -59,10 +59,11 @@ void loop() {
     // Only request status updates from the slaves when Rover is not moving (I2C Bus is free)
     pollSubsystemState();
   }
-  handleRoverStatus();  // Update Motion Control status
+
+  handleRoverStatus();
 }
 
-// Function to poll status from each subsystem
+// Function to poll status from eac subsystem
 void pollSubsystemState() {
   requestPanelState(PANEL_SUBSYSTEM_ADDR);
   requestSamplingState(DRILL_SUBSYSTEM_ADDR);
@@ -70,6 +71,6 @@ void pollSubsystemState() {
 }
 
 void handleInterrupt() {
-  // Set the flag to indicate the interrupt occurred, when last command motion is completed
+  // Set the flag to indicate the interrupt occurred, when las command motion is completed
   interruptFlag = true;
 }

@@ -3,7 +3,7 @@
 
 #include "motion.h"
 
-extern volatile bool roverActive;
+extern volatile bool roverMoving;
 
 void serial_innit() {
   Serial.begin(9600);  // Start serial for output
@@ -20,11 +20,11 @@ void serial_input() {
     bool validCommand = false;
 
     if (command.equals("stop")) {
-      roverActive = false;  // Set roverActive to false
+      roverMoving = false;  // Set roverMoving to false
       Serial.println("Rover stopped.");
       validCommand = true;
     } else if (command.equals("resume")) {
-      roverActive = true;  // Set roverActive to true
+      roverMoving = true;  // Set roverMoving to true
       Serial.println("Rover Resumed.");
       validCommand = true;
     } else if (command.startsWith("move")) {
@@ -32,6 +32,9 @@ void serial_input() {
       commandDistance = command.substring(5).toFloat();  // Skip "move "
       moveStraight(commandDistance);
       validCommand = true;
+      Serial.print("Moving rover by distance: ");
+      // Print the command for debugging purposes
+      Serial.println(commandDistance);
     } else if (command.startsWith("turn")) {
       // Expected command format: "turn angle radius"
       int firstSpaceIndex = command.indexOf(' ');
@@ -44,6 +47,11 @@ void serial_input() {
         if (commandRadius > 0) {
           turnByRadius(commandAngle, commandRadius);
           validCommand = true;
+          // Print the command for debugging purposes
+          Serial.print("Turning rover by angle: ");
+          Serial.print(commandAngle);
+          Serial.print(" with radius: ");
+          Serial.println(commandRadius);
         } else {
           Serial.println("Invalid radius. Please enter a positive number for radius.");
         }

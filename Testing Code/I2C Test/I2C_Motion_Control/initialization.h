@@ -4,9 +4,9 @@
 #include "I2C.h"
 
 // Declare external variables for global access across different files
-extern const int NMOTORS;  // Number of motors in the system
-extern const int ENCA[];   // Array of pins for encoder A for each motor
-extern const int ENCB[];   // Array of pins for encoder B for each motor
+extern const uint8_t  NMOTORS;  // Number of motors in the system
+extern const uint8_t  ENCA[];   // Array of pins for encoder A for each motor
+extern const uint8_t  ENCB[];   // Array of pins for encoder B for each motor
 extern volatile float deltaT;
 
 // Create an instance of the Adafruit PWM servo driver
@@ -18,12 +18,13 @@ void setupEncoders();
 void initialization(void) {
   //pwm_map_innit();  // Initialize the PWM map
   serial_innit();  // Initialize serial communication
-  i2cInit();       // Initialize I2C communication
 
   pwm.begin();                           // Start communication with PCA9685 PWM driver
   pwm.setOscillatorFrequency(27000000);  // Set the onboard oscillator of PCA9685 to 27 MHz
   pwm.setPWMFreq(1600);                  // Set the PWM frequency to 1.6 kHz, the maximum value for PCA9685
   setupEncoders();
+
+  i2cInit();  // Initialize I2C communication
 }
 
 // Function to setup encoders for all motors

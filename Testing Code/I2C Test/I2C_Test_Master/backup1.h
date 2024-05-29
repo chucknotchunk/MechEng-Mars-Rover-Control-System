@@ -49,30 +49,30 @@ void setup() {
 }
 
 void loop() {
-  // // Request battery status from the slave
-  // pollSubsystemState();
-  // // requestBatteryState(BATTERY_SUBSYSTEM_ADDR);
+  // Request battery status from the slave
+  pollSubsystemState();
+  // requestBatteryState(BATTERY_SUBSYSTEM_ADDR);
 
-  // // Print the received data to the serial monitor
-  // Serial.print("Current Power Draw: ");
-  // Serial.print(currentPowerDraw);
-  // Serial.println(" A");
+  // Print the received data to the serial monitor
+  Serial.print("Current Power Draw: ");
+  Serial.print(currentPowerDraw);
+  Serial.println(" A");
 
-  // Serial.print("Current Power Level: ");
-  // Serial.print(currentPowerLevel);
-  // Serial.println(" %");
+  Serial.print("Current Power Level: ");
+  Serial.print(currentPowerLevel);
+  Serial.println(" %");
 
-  // Serial.print("Current Core Temperature: ");
-  // Serial.print(currentCoreTemperature);
-  // Serial.println(" °C");
+  Serial.print("Current Core Temperature: ");
+  Serial.print(currentCoreTemperature);
+  Serial.println(" °C");
 
-  // delay(10);  // Delay to avoid excessive I2C bus usage
+  delay(10);  // Delay to avoid excessive I2C bus usage
 
-  // Example: sending commands from serial input for testing purposes
-  if (Serial.available() > 0) {
-    String command = Serial.readStringUntil('\n');
-    sendMotionCommand(MOTION_SUBSYSTEM_ADDR, command);
-  }
+  // // Example: sending commands from serial input for testing purposes
+  // if (Serial.available() > 0) {
+  //   String command = Serial.readStringUntil('\n');
+  //   sendMotionCommand(MOTION_SUBSYSTEM_ADDR, command);
+  // }
 }
 
 // Function to poll status from eac subsystem

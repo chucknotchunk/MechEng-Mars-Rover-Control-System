@@ -2,8 +2,8 @@
 #define _MOTOR_H
 
 // Declare external variables for global access across different files
-extern const int RPWM[];
-extern const int LPWM[];
+extern const uint8_t  RPWM[];
+extern const uint8_t  LPWM[];
 
 void setMotor(int motorIndex, int motorVelocity) {
 

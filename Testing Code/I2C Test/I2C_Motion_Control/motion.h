@@ -11,7 +11,7 @@ extern volatile float accLimit[];
 
 extern const int dirMotor[];
 
-extern const int NMOTORS;
+extern const uint8_t  NMOTORS;
 extern const float axleTrack;
 extern const float wheelBase;
 

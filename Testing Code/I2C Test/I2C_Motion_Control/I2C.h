@@ -5,7 +5,8 @@
 #include <Wire.h>
 #include "motion.h"
 
-extern volatile bool roverActive;
+extern volatile bool roverMoving;
+extern volatile bool interruptFlag;
 
 // Forward declarations
 void receiveEvent(int howMany);
@@ -35,17 +36,28 @@ void processCommand(String command) {
   float commandRadius = 0.0;
   bool validCommand = false;
 
-  if (command.equals("S")) {
-    roverActive = false;
-    Serial.println("Rover stopped.");
-    validCommand = true;
-  } else if (command.equals("R")) {
-    roverActive = true;
+  // if (command.equals("S")) {
+  //   roverMoving = false;
+  //   Serial.println("Rover stopped.");
+  //   validCommand = true;
+  //}
+  if (command.equals("R")) {
+    interruptFlag = false;  // Reset interrupt flag
+    // Serial.println(interruptFlag);
     Serial.println("Rover Resumed.");
     validCommand = true;
-  } else if (command.startsWith("M")) {
+  }
+  if (interruptFlag) {
+    Serial.println("Rover Paused.");
+    return;
+  }
+  if (command.startsWith("M")) {
     commandDistance = command.substring(1).toFloat();
     moveStraight(commandDistance);
+    roverMoving = true;
+    // Print the command for debugging purposes
+    Serial.print("Moving rover by distance: ");
+    Serial.println(commandDistance);
     validCommand = true;
   } else if (command.startsWith("T")) {
     int commaIndex = command.indexOf(',');
@@ -53,7 +65,13 @@ void processCommand(String command) {
       commandAngle = command.substring(1, commaIndex).toFloat();
       commandRadius = command.substring(commaIndex + 1).toFloat();
       if (commandRadius > 0) {
+        roverMoving = true;
         turnByRadius(commandAngle, commandRadius);
+        // Print the command for debugging purposes
+        Serial.print("Turning rover by angle: ");
+        Serial.print(commandAngle);
+        Serial.print(" with radius: ");
+        Serial.println(commandRadius);
         validCommand = true;
       } else {
         Serial.println("Invalid radius. Please enter a positive number for radius.");
