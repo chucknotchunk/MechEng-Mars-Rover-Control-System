@@ -10,6 +10,11 @@ The Mars Rover Control System is a sophisticated software suite designed to oper
 - **Steering Functions:**
   - Initial skid steering implementation.
   - Planned advanced steering with sensor fusion and dynamic power distribution.
+- **Central Controller Integration:**
+  - Centralized command processing to coordinate various subsystems.
+  - Improved synchronization and communication between motion control, panel deployment, and sample collection systems.
+  - Enhanced overall system integration and performance, ensuring cohesive operation of all rover functionalities.
+
 
 ## Getting Started
 1. **Initial Setup:**
@@ -36,15 +41,31 @@ The Mars Rover Control System is a sophisticated software suite designed to oper
 
 To control the rover, use the serial monitor in the Arduino IDE. The rover accepts several commands, each of which controls different aspects of its movement:
 
+### Motion Control
+
 - **Moving Straight:** To move the rover straight, enter the command in the format `move [distance]`. Replace `[distance]` with the desired distance value. The rover will move straight for the specified distance. Distance can be positive for forward movement or negative for backward movement.
 
-- **Turning:** To turn the rover, use the command `turn [angle] [radius]`. Replace `[angle]` with the desired turning angle (in degrees) and `[radius]` with the turning radius. Positive angles will turn the rover to the right, and negative angles will turn it to the left. Note that the radius should be a positive number.
+- **Turning:** To turn the rover, use the command `turn [angle] [radius]`. Replace `[angle]` with the desired turning angle (in degrees) and `[radius]` with the turning radius. Positive angles will turn the rover to the left, and negative angles will turn it to the right. Note that the radius should be a positive number.
 
 - **Stopping:** To immediately stop the rover, enter the command `stop`. This command halts all rover movements and operations.
 
 - **Resuming Movement:** After stopping, to resume rover operations, enter the command `resume`. This command allows the rover to accept and execute new movement commands.
 
-Example Commands:
+### Panel Deployment
+
+- **Deploying the Panel:** To deploy the panel, enter the command `deploy panel`. This command will activate the panel deployment mechanism.
+
+- **Retracting the Panel:** To retract the panel, enter the command `retract panel`. This command will retract the panel if it is currently deployed.
+
+### Sample Collection
+
+- **Starting Drilling:** To start the drilling process, enter the command `start drill`. This command will activate the drill if the rover is stationary and the panel is retracted.
+
+- **Stopping Drilling:** To stop the drilling process, enter the command `stop drill`. This command will halt the drill operation.
+
+### Example Commands:
+
+#### Motion Control
 - Move forward 10 meters: `move 10`
 - Move backward 5 meters: `move -5`
 - Turn right 45 degrees with a radius of 2 meters: `turn 45 2`
@@ -52,22 +73,33 @@ Example Commands:
 - Stop the rover: `stop`
 - Resume the rover: `resume`
 
+#### Panel Deployment
+- Deploy the panel: `deploy panel`
+- Retract the panel: `retract panel`
+
+#### Sample Collection
+- Start drilling: `start drill`
+- Stop drilling: `stop drill`
+
 Ensure the rover is in a safe and clear area before sending movement commands. Monitor the rover's operation closely to prevent accidents or collisions.
+
 
 ## Development Roadmap
 
 - **Steering Enhancements:** 
   - [*Implemented*] Implemented 'turn by radius' functionality, allowing the rover to turn with a specified angle and radius.
 
-- **Sensor Fusion:** 
-  - [*Planned*] Integrating an Inertial Measurement Unit (IMU) with wheel encoders to enhance navigation accuracy and stability.
+- **Central Controller:** 
+  - [*Planned*] Developing a central controller to coordinate various subsystems of the rover, improving overall system integration and performance.
 
 - **GUI Implementation:** 
   - [*Planned*] Developing a graphical user interface (GUI) to provide a more intuitive and user-friendly control experience for the rover.
 
-- **Traction Control:** 
-  - [*Planned*] Adding a dynamic power distribution system to improve traction across different terrains, enhancing the rover's adaptability and performance.
-
+- **Sensor Fusion:** 
+  - [*Planned*] Integrating an Inertial Measurement Unit (IMU) with wheel encoders to enhance navigation accuracy and stability.
+  
+- **Trajectory Planning:** 
+  - [*Planned*] Implementing trajectory planning algorithms to enable the rover to navigate via waypoints autonomously.
 
 ## Acknowledgments
 - Special thanks to Dr. Schwingshackl for guidance and feedback on the project.
