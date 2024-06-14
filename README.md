@@ -1,7 +1,7 @@
 # Mars Rover Control System
 
 ## Project Overview
-The Mars Rover Control System is a sophisticated software suite designed to operate a rover with precise movement control. This system includes features for basic motion commands, PID control for stability, and advanced steering functionalities. It lays the foundation for future enhancements like sensor fusion and GUI-based control.
+The Mars Rover Control System is designed to coordinate the actions between onboard subsystems and includes a motion control system to direct the Rover in executing commanded movements. This system establishes a foundation for future enhancements, including sensor fusion and GUI-based control.
 
 ## Features
 - **Basic Word Commands:** Control rover movement with simple commands like "move 5" to move forward 5 meters.
@@ -24,8 +24,8 @@ The Mars Rover Control System is a sophisticated software suite designed to oper
 
 ### 2. **Configuration:**
    - Before uploading the code to the microcontroller, adjust the following parameters in the code to match your rover's hardware specifications:
-     - `pulsePerRev`: The number of encoder pulses per revolution. Default is set to `11`.
-     - `gearRatio`: The gear ratio of your rover's motor. Default is set to `103`.
+     - `pulsePerRev`: The number of encoder pulses per revolution. Default is set to `16`.
+     - `gearRatio`: The gear ratio of your rover's motor. Default is set to `55`.
      - `wheelRadius`: The radius of your rover's wheels. Default is set to `10` cm.
      - `axleTrack`: The distance between the center of the tires on each axle. Default is set to `1.2` meters.
      - `wheelBase`: The distance between the front and rear axle. Default is set to `1` meter.
@@ -90,7 +90,7 @@ Ensure the rover is in a safe and clear area before sending movement commands. M
   - [*Implemented*] Implemented 'turn by radius' functionality, allowing the rover to turn with a specified angle and radius.
 
 - **Central Controller:** 
-  - [*Planned*] Developing a central controller to coordinate various subsystems of the rover, improving overall system integration and performance.
+  - [*Implemented*] Developing a central controller to coordinate various subsystems of the rover, improving overall system integration and performance.
 
 - **GUI Implementation:** 
   - [*Planned*] Developing a graphical user interface (GUI) to provide a more intuitive and user-friendly control experience for the rover.

@@ -2,47 +2,73 @@
 #define _MOTION_H
 
 #include <math.h>
+#include "helper.h"
 
 extern volatile float motorTargetPos[];
+
+extern volatile float velLimit[];
+extern volatile float accLimit[];
+
 extern const int dirMotor[];
 
-extern const int NMOTORS;
+extern const uint8_t  NMOTORS;
 extern const float axleTrack;
 extern const float wheelBase;
 
 void moveStraight(float distance) {
   for (int i = 0; i < NMOTORS; i++) {
+    // Set the velocity and acceleration of position change
+    accLimit[i] = 0.1;
+    velLimit[i] = 0.1;
     // new tareget = old target + position change
-    motorTargetPos[i] = motorTargetPos[i] + dirMotor[i] * distance;
+    motorTargetPos[i] += dirMotor[i] * distance;
   }
 }
 
 void turnByRadius(int angle, float radius) {
-  // Constants for the geometric calculations
-  float rightInnerRadius = radius - axleTrack / 2;
-  float rightOuterRadius = radius + axleTrack / 2;
-  float turnArcRightInner = angle * DEG_TO_RAD * rightInnerRadius;
-  float turnArcRightOuter = angle * DEG_TO_RAD * sqrt(pow(rightInnerRadius, 2) + pow(wheelBase / 2, 2));
-  float turnArcLeftInner = angle * DEG_TO_RAD * rightOuterRadius;
-  float turnArcLeftOuter = angle * DEG_TO_RAD * sqrt(pow(rightOuterRadius, 2) + pow(wheelBase / 2, 2));
+  // Motor position increment for each motion
+  float motorIncrementPos[] = { 0, 0, 0, 0, 0, 0 };
+  float velmax = 0.1;    // Linear velocity limit of the wheel
+  float tbRatio = 0.25;  // Parabolic blend time to total time ratio
 
-  // Update motor positions based on the turn direction
+  // Constants for the geometric calculations
+  float leftInnerRadius = radius - axleTrack / 2;
+  float leftOuterRadius = radius + axleTrack / 2;
+  float turnArcLeftInner = abs(angle) * DEG_TO_RAD * leftInnerRadius;
+  float turnArcLeftOuter = abs(angle) * DEG_TO_RAD * mySign(leftInnerRadius) * sqrt(pow(leftInnerRadius, 2) + pow(wheelBase / 2, 2));
+  float turnArcRightInner = abs(angle) * DEG_TO_RAD * leftOuterRadius;
+  float turnArcRightOuter = abs(angle) * DEG_TO_RAD * mySign(leftOuterRadius) * sqrt(pow(leftOuterRadius, 2) + pow(wheelBase / 2, 2));
+
+  // Update motor target positions based on the turn direction
   if (angle > 0) {
-    // Right turn
-    motorTargetPos[0] = motorTargetPos[0] + dirMotor[0] * turnArcRightOuter;
-    motorTargetPos[2] = motorTargetPos[2] + dirMotor[2] * turnArcRightInner;
-    motorTargetPos[4] = motorTargetPos[4] + dirMotor[4] * turnArcRightOuter;
-    motorTargetPos[1] = motorTargetPos[1] + dirMotor[1] * turnArcLeftOuter;
-    motorTargetPos[3] = motorTargetPos[3] + dirMotor[3] * turnArcLeftInner;
-    motorTargetPos[5] = motorTargetPos[5] + dirMotor[5] * turnArcLeftOuter;
-  } else if (angle < 0) {
     // Left turn
-    motorTargetPos[0] = motorTargetPos[0] + dirMotor[0] * turnArcLeftOuter;
-    motorTargetPos[2] = motorTargetPos[2] + dirMotor[2] * turnArcLeftInner;
-    motorTargetPos[4] = motorTargetPos[4] + dirMotor[4] * turnArcLeftOuter;
-    motorTargetPos[1] = motorTargetPos[1] + dirMotor[1] * turnArcRightOuter;
-    motorTargetPos[3] = motorTargetPos[3] + dirMotor[3] * turnArcRightInner;
-    motorTargetPos[5] = motorTargetPos[5] + dirMotor[5] * turnArcRightOuter;
+    motorIncrementPos[0] = dirMotor[0] * turnArcLeftOuter;
+    motorIncrementPos[2] = dirMotor[2] * turnArcLeftInner;
+    motorIncrementPos[4] = dirMotor[4] * turnArcLeftOuter;
+    motorIncrementPos[1] = dirMotor[1] * turnArcRightOuter;
+    motorIncrementPos[3] = dirMotor[3] * turnArcRightInner;
+    motorIncrementPos[5] = dirMotor[5] * turnArcRightOuter;
+  } else if (angle < 0) {
+    // Right turn
+    motorIncrementPos[0] = dirMotor[0] * turnArcRightOuter;
+    motorIncrementPos[2] = dirMotor[2] * turnArcRightInner;
+    motorIncrementPos[4] = dirMotor[4] * turnArcRightOuter;
+    motorIncrementPos[1] = dirMotor[1] * turnArcLeftOuter;
+    motorIncrementPos[3] = dirMotor[3] * turnArcLeftInner;
+    motorIncrementPos[5] = dirMotor[5] * turnArcLeftOuter;
+  }
+
+  float maxDistance = findMaxValue(motorIncrementPos, NMOTORS);
+  // Calculate total steering time based on blend time to total time ratio and velocity limit
+  float tf = maxDistance / velmax / (1 - tbRatio);
+  float th = tf / 2;  // Half time of the total motion
+  float tb = tf * tbRatio;
+
+  // Calculate the required velocity and acceleration for each wheel ensuring synchronized movements (linear function with parabolic blend)
+  for (int k = 0; k < NMOTORS; k++) {
+    accLimit[k] = motorIncrementPos[k] / (2 * th * tb - pow(tb, 2));
+    velLimit[k] = accLimit[k] * tb;
+    motorIncrementPos[k] += motorIncrementPos[k];  // Update motor target position
   }
 }
 
