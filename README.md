@@ -1,5 +1,5 @@
 # Mars Rover Control System
-
+![](https://i.postimg.cc/J094jyk1/Whats-App-Image-2024-03-24-at-22-07-13-a4611edf.jpg)
 ## Project Overview
 The Mars Rover Control System is designed to coordinate the actions between onboard subsystems and includes a motion control system to direct the Rover in executing commanded movements. This system establishes a foundation for future enhancements, including sensor fusion and GUI-based control.
 
@@ -15,12 +15,11 @@ The Mars Rover Control System is designed to coordinate the actions between onbo
   - Improved synchronization and communication between motion control, panel deployment, and sample collection systems.
   - Enhanced overall system integration and performance, ensuring cohesive operation of all rover functionalities.
 
-
 ## Getting Started
 1. **Initial Setup:**
    - Clone the repository to your local machine.
    - Ensure you have the Arduino IDE installed.
-   - Connect your rover hardware as per the schematic provided in the `docs` folder.
+   - Connect your rover hardware as per the guide provided in the `Docs` folder.
 
 ### 2. **Configuration:**
    - Before uploading the code to the microcontroller, adjust the following parameters in the code to match your rover's hardware specifications:
@@ -29,8 +28,6 @@ The Mars Rover Control System is designed to coordinate the actions between onbo
      - `wheelRadius`: The radius of your rover's wheels. Default is set to `10` cm.
      - `axleTrack`: The distance between the center of the tires on each axle. Default is set to `1.2` meters.
      - `wheelBase`: The distance between the front and rear axle. Default is set to `1` meter.
-   - Refer to the 'Configuration Guide' in the `docs` folder for detailed instructions on these parameters.
-
 
 3. **Upload the Code:**
    - Open the project in Arduino IDE.
