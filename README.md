@@ -4,15 +4,15 @@
 The Mars Rover Control System is designed to coordinate the actions between onboard subsystems and includes a motion control system to direct the Rover in executing commanded movements. This system establishes a foundation for future enhancements, including sensor fusion and GUI-based control.
 
 ## Features
-- **Basic Word Commands:** Control rover movement with simple commands like "move 5" to move forward 5 meters.
-- **PID Control:** Optimized PID parameters for stable and responsive motor control, minimizing overshoot and settling time.
-- **Modular Code Design:** Highly modularized and generalized code for ease of maintenance and scalability.
+- **Basic Word Commands:** Control rover movement with simple commands like "move 5" to move forward 5 metres.
+- **PID Control:** Optimised PID parameters for stable and responsive motor control, minimising overshoot and settling time.
+- **Modular Code Design:** Highly modularised and generalised code for ease of maintenance and scalability.
 - **Steering Functions:**
   - Initial skid steering implementation.
   - Planned advanced steering with sensor fusion and dynamic power distribution.
 - **Central Controller Integration:**
-  - Centralized command processing to coordinate various subsystems.
-  - Improved synchronization and communication between motion control, panel deployment, and sample collection systems.
+  - Centralised command processing to coordinate various subsystems.
+  - Improved synchronisation and communication between motion control, panel deployment, and sample collection systems.
   - Enhanced overall system integration and performance, ensuring cohesive operation of all rover functionalities.
 
 ## Getting Started
@@ -26,13 +26,16 @@ The Mars Rover Control System is designed to coordinate the actions between onbo
      - `pulsePerRev`: The number of encoder pulses per revolution. Default is set to `16`.
      - `gearRatio`: The gear ratio of your rover's motor. Default is set to `55`.
      - `wheelRadius`: The radius of your rover's wheels. Default is set to `10` cm.
-     - `axleTrack`: The distance between the center of the tires on each axle. Default is set to `1.2` meters.
-     - `wheelBase`: The distance between the front and rear axle. Default is set to `1` meter.
+     - `axleTrack`: The distance between the centre of the tyres on each axle. Default is set to `1.2` metres.
+     - `wheelBase`: The distance between the front and rear axle. Default is set to `1` metre.
 
 3. **Upload the Code:**
    - Open the project in Arduino IDE.
    - Select the correct board and port.
-   - Upload the code to your rover's microcontroller.
+   - Upload the code to your rover's microcontroller:
+     - Use the code in the `Motion_Control` folder for the motion control Arduino.
+     - Use the code in the `Master_Control` folder for the central controller.
+   - Ensure you upload to the appropriate controller.
 
 ## Usage
 
@@ -63,10 +66,10 @@ To control the rover, use the serial monitor in the Arduino IDE. The rover accep
 ### Example Commands:
 
 #### Motion Control
-- Move forward 10 meters: `move 10`
-- Move backward 5 meters: `move -5`
-- Turn right 45 degrees with a radius of 2 meters: `turn 45 2`
-- Turn left 30 degrees with a radius of 3 meters: `turn -30 3`
+- Move forward 10 metres: `move 10`
+- Move backward 5 metres: `move -5`
+- Turn right 45 degrees with a radius of 2 metres: `turn 45 2`
+- Turn left 30 degrees with a radius of 3 metres: `turn -30 3`
 - Stop the rover: `stop`
 - Resume the rover: `resume`
 
@@ -98,6 +101,6 @@ Ensure the rover is in a safe and clear area before sending movement commands. M
 - **Trajectory Planning:** 
   - [*Planned*] Implementing trajectory planning algorithms to enable the rover to navigate via waypoints autonomously.
 
-## Acknowledgments
+## Acknowledgements
 - Special thanks to Dr. Schwingshackl for guidance and feedback on the project.
 - Contributors and testers who have helped refine and improve the system.
